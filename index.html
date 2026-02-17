@@ -238,6 +238,33 @@
       font-weight:800;
       font-size:13px;
     }
+
+    /* Added for the new feature: show final result on lock screen */
+    .lockResult{
+      margin-top:14px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.14);
+      background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+    }
+    .lockResult .title{
+      margin:0 0 6px;
+      font-size:14px;
+      font-weight:950;
+      letter-spacing:.2px;
+    }
+    .lockResult .line{
+      margin:0;
+      font-size:13.5px;
+      color:var(--text);
+      line-height:1.25;
+    }
+    .lockResult .miniLine{
+      margin:8px 0 0;
+      font-size:12.5px;
+      color:var(--muted);
+      line-height:1.25;
+    }
   </style>
 </head>
 
@@ -325,6 +352,9 @@
   const RUN_LOCK_KEY = "pizzaFeeGame_runCompleted_v2";
   const SCORE_KEY    = "pizzaFeeGame_slicesScore_v2";
 
+  // NEW FEATURE: persist final result for lock screen
+  const FINAL_RESULT_KEY = "pizzaFeeGame_finalResult_v1";
+
   // If you (presenter) ever need to unlock a device for testing:
   // open URL with ?unlock=1 once on that device.
   const params = new URLSearchParams(location.search);
@@ -333,6 +363,7 @@
   if (unlock) {
     localStorage.removeItem(RUN_LOCK_KEY);
     localStorage.removeItem(SCORE_KEY);
+    localStorage.removeItem(FINAL_RESULT_KEY); // NEW: clear stored final result too
     // remove query param for cleanliness
     params.delete("unlock");
     const newUrl = location.pathname + (params.toString() ? "?" + params.toString() : "");
@@ -345,17 +376,30 @@
   ];
 
   /**********************
-   * LOCK SCREEN
+   * LOCK SCREEN (enhanced with final result)
    **********************/
   if (localStorage.getItem(RUN_LOCK_KEY) === "1") {
+    let stored = null;
+    try { stored = JSON.parse(localStorage.getItem(FINAL_RESULT_KEY) || "null"); } catch(e){ stored = null; }
+
+    const headline = stored?.headline || "Game completed.";
+    const detail   = stored?.detail   || "";
+    const pizzas   = stored?.pizzas   || "";
+    const slices   = (typeof stored?.slices === "number") ? stored.slices : null;
+
     document.body.innerHTML = `
       <div class="wrap">
         <div class="lockscreen">
           <div class="pill"><span class="dot"></span> One run per device</div>
           <h1 style="margin:12px 0 6px; font-size:18px;">Thanks for playing! 🍕</h1>
-          <p style="margin:0; color:var(--muted); line-height:1.25;">
-            This device already completed the game. Please show your final result screen to the presenter.
-          </p>
+
+          <div class="lockResult">
+            <p class="title">${headline}</p>
+            <p class="line">${slices !== null ? `Slices earned: <b>${slices}</b>` : ""}</p>
+            ${detail ? `<p class="line" style="margin-top:6px;">${detail}</p>` : ""}
+            ${pizzas ? `<div class="pizza center">${pizzas}</div>` : ""}
+            <p class="miniLine">Please show this screen to the presenter.</p>
+          </div>
         </div>
       </div>
     `;
@@ -375,6 +419,18 @@
 
   function lockRun(){
     localStorage.setItem(RUN_LOCK_KEY, "1");
+  }
+
+  // NEW FEATURE: store final result for lock screen recall
+  function storeFinalResult({ headline, detail, pizzas, slices }){
+    const payload = {
+      headline: headline || "Game completed.",
+      detail: detail || "",
+      pizzas: pizzas || "",
+      slices: (typeof slices === "number") ? slices : null,
+      ts: Date.now()
+    };
+    localStorage.setItem(FINAL_RESULT_KEY, JSON.stringify(payload));
   }
 
   /**********************
@@ -415,6 +471,14 @@
 
     // Automatic outcome: +2 slices
     setScore(score + 2);
+
+    // NEW FEATURE: store final result (B)
+    storeFinalResult({
+      headline: "🍕🍕 You won 2 slices",
+      detail: "Predictable & regulated: contingency fees generally prohibited.",
+      pizzas: "🍕🍕",
+      slices: 2
+    });
 
     // Lock run and keep screen visible (inputs disabled)
     lockRun();
@@ -552,6 +616,16 @@
         pizzaA.textContent = out.pizzas;
 
         setScore(score + out.slices);
+
+        // NEW FEATURE: store final result (A)
+        storeFinalResult({
+          headline: out.label,
+          detail: out.key === "win"
+            ? "Risky, but it paid off under the American approach."
+            : "Risky outcome under the American approach.",
+          pizzas: out.pizzas,
+          slices: out.slices
+        });
 
         // Lock run and freeze inputs (keep result visible)
         lockRun();
