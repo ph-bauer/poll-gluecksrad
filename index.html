@@ -306,7 +306,7 @@
               <div class="actionRow">
                 <button id="spin" class="spinBtn">Spin</button>
               </div>
-              <p class="muted center" style="margin-top:10px;">Outcome: either <b>+4 slices</b> (client wins) or <b>+0 slices</b> (client loses).</p>
+              <p class="muted center" style="margin-top:10px;">Outcome: either <b>+3 slices</b> (client wins) or <b>+0 slices</b> (client loses).</p>
             </div>
 
             <div class="panel">
@@ -327,7 +327,7 @@
           <div class="panel">
             <div class="outcomeTitle">Step 2) Automatic outcome</div>
             <p class="outcomeText" style="font-weight:900;">
-              🍕🍕 You won <b>2 slices</b>
+              🍕 You won <b>1 slice</b>
             </p>
             <p class="muted" style="margin-top:8px;">Predictable & regulated: contingency fees generally prohibited.</p>
 
@@ -371,7 +371,7 @@
   }
 
   const OUTCOMES = [
-    { key:"win",  label: "🍕🍕🍕🍕 Hurray — your client won the whole pizza!", slices: 4, pizzas: "🍕🍕🍕🍕" },
+    { key:"win",  label: "🍕🍕🍕 Hurray — your client won the whole pizza!", slices: 3, pizzas: "🍕🍕🍕" },
     { key:"lose", label: "🙃 Sorry — your client lost. No pizza tonight.", slices: 0, pizzas: "" },
   ];
 
@@ -469,15 +469,15 @@
     step2B.style.display = "block";
     step2A.style.display = "none";
 
-    // Automatic outcome: +2 slices
-    setScore(score + 2);
+    // Automatic outcome: +1 slice
+    setScore(score + 1);
 
     // NEW FEATURE: store final result (B)
     storeFinalResult({
-      headline: "🍕🍕 You won 2 slices",
+      headline: "🍕 You won 1 slice",
       detail: "Predictable & regulated: contingency fees generally prohibited.",
-      pizzas: "🍕🍕",
-      slices: 2
+      pizzas: "🍕",
+      slices: 1
     });
 
     // Lock run and keep screen visible (inputs disabled)
@@ -646,3 +646,4 @@
 </script>
 </body>
 </html>
+
